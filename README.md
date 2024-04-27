@@ -1,0 +1,1 @@
+A complete practical implementation of how to implement authentication backend APIs with FastAPI and AWS Cognito.
