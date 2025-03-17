@@ -10,9 +10,8 @@ app = FastAPI(
 )
 
 
-
 # Index health check
-@app.get('/')
+@app.get("/")
 def index():
     return {"message": "Authentication service"}
 

@@ -6,7 +6,8 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class UserSignup(BaseModel):
-    full_name: str = Field(max_length=50)
+    given_name: str = Field(max_length=50)
+    family_name: str = Field(max_length=50)
     email: EmailStr
     phone_number: Annotated[str, MinLen(10)]
     password: Annotated[str, MinLen(8)]

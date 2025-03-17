@@ -10,7 +10,6 @@ boto3 = "*"
 botocore = "*"
 click = "*"
 colorama = "*"
-fastapi = "*"
 h11 = "*"
 idna = "*"
 jmespath = "*"
@@ -25,6 +24,9 @@ starlette = "*"
 typing-extensions = "*"
 urllib3 = "*"
 uvicorn = "*"
+fastapi = {extras = ["standard"], version = "*"}
+pydantic-settings = "*"
+python-multipart = "*"
 
 [dev-packages]
 
