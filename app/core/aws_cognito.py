@@ -3,7 +3,7 @@ from pydantic import EmailStr
 from datetime import datetime, timezone
 
 
-from ..models.user_model import ChangePassword, ConfirmForgotPassword, UserSignin, UserSignup, UserVerify
+from ..models.user_model import ChangePassword, ConfirmForgotPassword, UserSignin, UserSignup, UserVerify, RespondAuthChallenge
 from .config import env_vars
 from os import getenv
 
@@ -95,7 +95,7 @@ class AWS_Cognito:
         response = self.client.initiate_auth(
             ClientId=AWS_COGNITO_APP_CLIENT_ID,
             AuthFlow="USER_AUTH",
-            AuthParameters={"USERNAME": data.email, "PASSWORD": data.password, "SECRET_HASH": secret_hash},
+            AuthParameters={"USERNAME": data.email, "PASSWORD": data.password, "SECRET_HASH": secret_hash, "PREFERRED_CHALLENGE": data.challenge_name},
         )
 
         return response
@@ -145,3 +145,31 @@ class AWS_Cognito:
         )
 
         return response
+
+    def send_response_challenge(self, data: RespondAuthChallenge):
+        respond_to_auth_challenge_params = {
+            "ClientId": AWS_COGNITO_APP_CLIENT_ID,
+            "UserPoolId": AWS_COGNITO_USER_POOL_ID,
+            "ChallengeName": data.challenge_name,
+            "Session": data.session_id,
+            "ChallengeResponses": {
+                "ANSWER": data.confirmation_code,
+                "USERNAME": data.email,
+            },
+        }
+        response = self.client.admin_respond_to_auth_challenge(**respond_to_auth_challenge_params)
+        print(response)
+        # Check if the authentication was successful
+        if response.get("AuthenticationResult"):
+            # Get the access token and other authentication results
+            access_token = response["AuthenticationResult"]["AccessToken"]
+            refresh_token = response["AuthenticationResult"]["RefreshToken"]
+
+            print("Authentication successful!")
+            print("Access token:", access_token)
+            print("Refresh token:", refresh_token)
+
+            return response.get("AuthenticationResult")
+        else:
+            print("Authentication failed!")
+            return None

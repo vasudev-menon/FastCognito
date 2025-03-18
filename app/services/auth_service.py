@@ -5,7 +5,7 @@ from pydantic import EmailStr
 
 
 from ..core.aws_cognito import AWS_Cognito
-from ..models.user_model import ChangePassword, ConfirmForgotPassword, UserSignin, UserSignup, UserVerify
+from ..models.user_model import ChangePassword, ConfirmForgotPassword, UserSignin, UserSignup, UserVerify, RespondAuthChallenge
 
 
 class AuthService:
@@ -170,3 +170,12 @@ class AuthService:
             for attribute in response["UserAttributes"]:
                 user[attribute["Name"]] = attribute["Value"]
             return JSONResponse(content=user, status_code=200)
+
+    def auth_challenge_response(data: RespondAuthChallenge, cognito: AWS_Cognito):
+        try:
+            # breakpoint()
+            response = cognito.send_response_challenge(data=data)
+            print(response)
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))

@@ -2,7 +2,16 @@ from fastapi import APIRouter, status, Depends
 from pydantic import EmailStr
 
 
-from ..models.user_model import AccessToken, ChangePassword, ConfirmForgotPassword, RefreshToken, UserSignin, UserSignup, UserVerify
+from ..models.user_model import (
+    AccessToken,
+    ChangePassword,
+    ConfirmForgotPassword,
+    RefreshToken,
+    UserSignin,
+    UserSignup,
+    UserVerify,
+    RespondAuthChallenge,
+)
 from ..services.auth_service import AuthService
 from ..core.aws_cognito import AWS_Cognito
 from ..core.dependencies import get_aws_cognito
@@ -71,3 +80,8 @@ async def logout(access_token: AccessToken, cognito: AWS_Cognito = Depends(get_a
 @auth_router.get("/user_details", status_code=status.HTTP_200_OK, tags=["Auth"])
 async def user_details(email: EmailStr, cognito: AWS_Cognito = Depends(get_aws_cognito)):
     return AuthService.user_details(email, cognito)
+
+# Respond to Auth Challenge (Password, OTP (Email/Phone))
+@auth_router.post("/respond_to_auth_challenge", status_code=status.HTTP_200_OK, tags=["Auth"])
+async def respond_to_auth_challenge(data: RespondAuthChallenge, cognito: AWS_Cognito = Depends(get_aws_cognito)):
+    return AuthService.auth_challenge_response(data, cognito)

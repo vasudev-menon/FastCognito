@@ -3,7 +3,13 @@ from annotated_types import MinLen, MaxLen
 
 
 from pydantic import BaseModel, EmailStr, Field
+from enum import Enum
 
+class Challenge(str, Enum):
+    PASSWORD_SRP = ("PASSWORD_SRP",)
+    PASSWORD = ("PASSWORD",)
+    EMAIL_OTP = ("EMAIL_OTP",)
+    SMS_MFA = "SMS_MFA"
 
 class UserSignup(BaseModel):
     given_name: str = Field(max_length=50)
@@ -22,6 +28,7 @@ class UserVerify(BaseModel):
 class UserSignin(BaseModel):
     email: EmailStr
     password: Annotated[str, MinLen(8)]
+    challenge_name: Challenge
 
 
 class ConfirmForgotPassword(BaseModel):
@@ -42,3 +49,10 @@ class RefreshToken(BaseModel):
 
 class AccessToken(BaseModel):
     access_token: str
+
+
+class RespondAuthChallenge(BaseModel):
+    session_id: str
+    challenge_name: Challenge
+    email: EmailStr
+    confirmation_code: str
