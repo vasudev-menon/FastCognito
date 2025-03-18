@@ -3,7 +3,7 @@ from pydantic import EmailStr
 from datetime import datetime, timezone
 
 
-from ..models.user_model import ChangePassword, ConfirmForgotPassword, UserSignin, UserSignup, UserVerify, RespondAuthChallenge
+from ..models.user_model import ChangePassword, ConfirmForgotPassword, UserSignin, UserSignup, UserVerify, RespondAuthChallenge, ConfirmSignup
 from .config import env_vars
 from os import getenv
 
@@ -173,3 +173,10 @@ class AWS_Cognito:
         else:
             print("Authentication failed!")
             return None
+
+    def signup_confirm_admin(self, data: ConfirmSignup):
+        response = self.client.admin_confirm_sign_up(
+            UserPoolId=AWS_COGNITO_USER_POOL_ID,
+            Username=data.email,
+        )
+        return response

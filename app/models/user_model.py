@@ -56,3 +56,6 @@ class RespondAuthChallenge(BaseModel):
     challenge_name: Challenge
     email: EmailStr
     confirmation_code: str
+
+class ConfirmSignup(BaseModel):
+    email: EmailStr
