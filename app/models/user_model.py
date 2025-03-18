@@ -1,15 +1,17 @@
-from typing import Annotated
-from annotated_types import MinLen, MaxLen
-
-
-from pydantic import BaseModel, EmailStr, Field
 from enum import Enum
+from typing import Annotated
+
+from annotated_types import MaxLen, MinLen
+from pydantic import BaseModel, EmailStr, Field
+
 
 class Challenge(str, Enum):
-    PASSWORD_SRP = ("PASSWORD_SRP",)
-    PASSWORD = ("PASSWORD",)
-    EMAIL_OTP = ("EMAIL_OTP",)
-    SMS_MFA = "SMS_MFA"
+    # PASSWORD_SRP = "PASSWORD_SRP"
+    PASSWORD = "PASSWORD"
+    EMAIL_OTP = "EMAIL_OTP"
+    SMS_OTP = "SMS_OTP"
+    # WEB_AUTHN = "WEB_AUTHN"
+
 
 class UserSignup(BaseModel):
     given_name: str = Field(max_length=50)
@@ -56,6 +58,7 @@ class RespondAuthChallenge(BaseModel):
     challenge_name: Challenge
     email: EmailStr
     confirmation_code: str
+
 
 class ConfirmSignup(BaseModel):
     email: EmailStr

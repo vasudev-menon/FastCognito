@@ -1,11 +1,10 @@
+import botocore
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
-import botocore
 from pydantic import EmailStr
 
-
 from ..core.aws_cognito import AWS_Cognito
-from ..models.user_model import ChangePassword, ConfirmForgotPassword, UserSignin, UserSignup, UserVerify, RespondAuthChallenge, ConfirmSignup
+from ..models.user_model import ChangePassword, ConfirmForgotPassword, ConfirmSignup, RespondAuthChallenge, UserSignin, UserSignup, UserVerify
 
 
 class AuthService:
@@ -354,7 +353,6 @@ class AuthService:
         :return: the response received after sending a challenge response to AWS Cognito.
         """
         try:
-            # breakpoint()
             response = cognito.send_response_challenge(data=data)
             print(response)
             return response

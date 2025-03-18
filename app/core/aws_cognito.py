@@ -1,20 +1,20 @@
+from datetime import datetime, timezone
+from os import getenv
+
 import boto3
 from pydantic import EmailStr
-from datetime import datetime, timezone
 
-
-from ..models.user_model import ChangePassword, ConfirmForgotPassword, UserSignin, UserSignup, UserVerify, RespondAuthChallenge, ConfirmSignup
+from ..models.user_model import ChangePassword, ConfirmForgotPassword, ConfirmSignup, RespondAuthChallenge, UserSignin, UserSignup, UserVerify
 from .config import env_vars
-from os import getenv
 
 AWS_REGION_NAME = env_vars.AWS_REGION_NAME
 AWS_COGNITO_APP_CLIENT_ID = env_vars.AWS_COGNITO_APP_CLIENT_ID
 AWS_COGNITO_USER_POOL_ID = env_vars.AWS_COGNITO_USER_POOL_ID
 
 def calculate_secret_hash(client_id, client_secret, username):
-    import hmac
-    import hashlib
     import base64
+    import hashlib
+    import hmac
 
     message = username + client_id
     dig = hmac.new(client_secret.encode("utf-8"), message.encode("utf-8"), hashlib.sha256).digest()
@@ -147,20 +147,32 @@ class AWS_Cognito:
         return response
 
     def send_response_challenge(self, data: RespondAuthChallenge):
+        secret_hash = calculate_secret_hash(getenv("AWS_COGNITO_APP_CLIENT_ID"), getenv("CLIENT_SECRET"), data.email)
+        challenge_resp = {}
+        if data.challenge_name == "EMAIL_OTP":
+            challenge_resp = {
+                "EMAIL_OTP_CODE": data.confirmation_code,
+                "USERNAME": data.email,
+                "SECRET_HASH": secret_hash,
+            }
+        if data.challenge_name == "SMS_OTP":
+            challenge_resp = {
+                "SMS_OTP_CODE": data.confirmation_code,
+                "USERNAME": data.email,
+                "SECRET_HASH": secret_hash,
+            }
+
         respond_to_auth_challenge_params = {
             "ClientId": AWS_COGNITO_APP_CLIENT_ID,
             "UserPoolId": AWS_COGNITO_USER_POOL_ID,
             "ChallengeName": data.challenge_name,
             "Session": data.session_id,
-            "ChallengeResponses": {
-                "ANSWER": data.confirmation_code,
-                "USERNAME": data.email,
-            },
+            "ChallengeResponses": challenge_resp,
         }
         response = self.client.admin_respond_to_auth_challenge(**respond_to_auth_challenge_params)
         print(response)
         # Check if the authentication was successful
-        if response.get("AuthenticationResult"):
+        if response.get("AuthenticationResult") is not None:
             # Get the access token and other authentication results
             access_token = response["AuthenticationResult"]["AccessToken"]
             refresh_token = response["AuthenticationResult"]["RefreshToken"]
