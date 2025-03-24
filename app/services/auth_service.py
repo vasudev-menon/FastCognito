@@ -244,7 +244,7 @@ class AuthService:
         else:
             return JSONResponse(content={"message": "Password changed successfully"}, status_code=200)
 
-    def new_access_token(refresh_token: str, cognito: AWS_Cognito, email: EmailStr):
+    def new_access_token(refresh_token: str, cognito: AWS_Cognito, access_token: str):
         """
         The function `new_access_token` generates a new access token using a refresh token in AWS
         Cognito and handles different exceptions accordingly.
@@ -263,7 +263,7 @@ class AuthService:
         its expiration time. The response includes the access token and its expiration time in seconds.
         """
         try:
-            response = cognito.new_access_token(refresh_token, email)
+            response = cognito.new_access_token(refresh_token, access_token)
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == "InvalidParameterException":
                 raise HTTPException(status_code=400, detail="Refresh token provided has wrong format")

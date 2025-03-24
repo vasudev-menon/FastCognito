@@ -175,7 +175,7 @@ async def new_access_token(refresh_token: RefreshToken, cognito: AWS_Cognito = D
     `AuthService.new_access_token` with the `refresh_token` extracted from the `RefreshToken` object and
     the `cognito` object obtained from the `get_aws_cognito` dependency.
     """
-    return AuthService.new_access_token(refresh_token.refresh_token, cognito, refresh_token.email)
+    return AuthService.new_access_token(refresh_token.refresh_token, cognito, refresh_token.access_token)
 
 
 # LOGOUT

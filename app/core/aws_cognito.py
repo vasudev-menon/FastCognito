@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from os import getenv
 
 import boto3
+import jwt
 from pydantic import EmailStr
 
 from ..models.user_model import ChangePassword, ConfirmForgotPassword, ConfirmSignup, RespondAuthChallenge, UserSignin, UserSignup, UserVerify
@@ -121,8 +122,9 @@ class AWS_Cognito:
 
         return response
 
-    def new_access_token(self, refresh_token: str, email: EmailStr):
-        secret_hash = calculate_secret_hash(getenv("AWS_COGNITO_APP_CLIENT_ID"), getenv("CLIENT_SECRET"), email)
+    def new_access_token(self, refresh_token: str, access_token: str):
+        decoded_token = jwt.decode(access_token, options={"verify_signature": False})
+        secret_hash = calculate_secret_hash(getenv("AWS_COGNITO_APP_CLIENT_ID"), getenv("CLIENT_SECRET"), decoded_token.get("username"))
         response = self.client.initiate_auth(
             ClientId=AWS_COGNITO_APP_CLIENT_ID,
             AuthFlow="REFRESH_TOKEN_AUTH",

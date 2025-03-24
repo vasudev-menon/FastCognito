@@ -48,7 +48,7 @@ class ChangePassword(BaseModel):
 
 class RefreshToken(BaseModel):
     refresh_token: str
-    email: EmailStr
+    access_token: str
 
 
 class AccessToken(BaseModel):
