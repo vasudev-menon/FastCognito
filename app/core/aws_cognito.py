@@ -12,6 +12,7 @@ AWS_REGION_NAME = env_vars.AWS_REGION_NAME
 AWS_COGNITO_APP_CLIENT_ID = env_vars.AWS_COGNITO_APP_CLIENT_ID
 AWS_COGNITO_USER_POOL_ID = env_vars.AWS_COGNITO_USER_POOL_ID
 
+
 def calculate_secret_hash(client_id, client_secret, username):
     import base64
     import hashlib
@@ -20,6 +21,7 @@ def calculate_secret_hash(client_id, client_secret, username):
     message = username + client_id
     dig = hmac.new(client_secret.encode("utf-8"), message.encode("utf-8"), hashlib.sha256).digest()
     return base64.b64encode(dig).decode()
+
 
 class AWS_Cognito:
     def __init__(self):
@@ -96,7 +98,12 @@ class AWS_Cognito:
         response = self.client.initiate_auth(
             ClientId=AWS_COGNITO_APP_CLIENT_ID,
             AuthFlow="USER_AUTH",
-            AuthParameters={"USERNAME": data.email, "PASSWORD": data.password, "SECRET_HASH": secret_hash, "PREFERRED_CHALLENGE": data.challenge_name},
+            AuthParameters={
+                "USERNAME": data.email,
+                "PASSWORD": data.password,
+                "SECRET_HASH": secret_hash,
+                "PREFERRED_CHALLENGE": data.challenge_name,
+            },
         )
 
         return response

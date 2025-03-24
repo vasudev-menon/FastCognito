@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, status
 from pydantic import EmailStr
 
@@ -32,20 +31,20 @@ async def verify_account(
     cognito: AWS_Cognito = Depends(get_aws_cognito),
 ):
     """
-    The function `verify_account` verifies a user account using AWS Cognito. Use this API after using `signup api` after you receive the code in `email/sms`. OTP code is only valid for 15 mins. Past the 15 mins, you will need to resend the code using `resend_confirmation_code` API.
-`
+        The function `verify_account` verifies a user account using AWS Cognito. Use this API after using `signup api` after you receive the code in `email/sms`. OTP code is only valid for 15 mins. Past the 15 mins, you will need to resend the code using `resend_confirmation_code` API.
+    `
 
-    :param data: The `data` parameter in the `verify_account` function is of type `UserVerify`. It
-    likely contains information needed to verify a user account, such as user credentials or
-    verification codes
-    :type data: UserVerify
-    :param cognito: The `cognito` parameter in the `verify_account` function is an instance of the
-    `AWS_Cognito` class. It is likely used for interacting with AWS Cognito services for user
-    authentication and management. The `get_aws_cognito` function is probably a dependency injector that
-    provides an instance
-    :type cognito: AWS_Cognito
-    :return: The `verify_account` function is returning the result of calling the `verify_account`
-    method from the `AuthService` class with the provided `data` and `cognito` parameters.
+        :param data: The `data` parameter in the `verify_account` function is of type `UserVerify`. It
+        likely contains information needed to verify a user account, such as user credentials or
+        verification codes
+        :type data: UserVerify
+        :param cognito: The `cognito` parameter in the `verify_account` function is an instance of the
+        `AWS_Cognito` class. It is likely used for interacting with AWS Cognito services for user
+        authentication and management. The `get_aws_cognito` function is probably a dependency injector that
+        provides an instance
+        :type cognito: AWS_Cognito
+        :return: The `verify_account` function is returning the result of calling the `verify_account`
+        method from the `AuthService` class with the provided `data` and `cognito` parameters.
     """
     return AuthService.verify_account(data, cognito)
 
@@ -220,6 +219,7 @@ async def user_details(email: EmailStr, cognito: AWS_Cognito = Depends(get_aws_c
     """
     return AuthService.user_details(email, cognito)
 
+
 # Respond to Auth Challenge (Password, OTP (Email/Phone))
 @auth_router.post("/respond_to_auth_challenge", status_code=status.HTTP_200_OK, tags=["Auth"])
 async def respond_to_auth_challenge(data: RespondAuthChallenge, cognito: AWS_Cognito = Depends(get_aws_cognito)):
@@ -241,6 +241,7 @@ async def respond_to_auth_challenge(data: RespondAuthChallenge, cognito: AWS_Cog
     """
     return AuthService.auth_challenge_response(data, cognito)
 
+
 @auth_router.post("/confirm_user_signup", status_code=status.HTTP_200_OK, tags=["Auth"])
 async def confirm_user_signup(data: ConfirmSignup, cognito: AWS_Cognito = Depends(get_aws_cognito)):
     """
@@ -259,6 +260,7 @@ async def confirm_user_signup(data: ConfirmSignup, cognito: AWS_Cognito = Depend
     :type cognito: AWS_Cognito
     """
     return AuthService.admin_confirm_user_signup(data, cognito)
+
 
 @auth_router.post("/add_mfa", status_code=status.HTTP_200_OK, tags=["Auth"])
 async def add_mfa_user(token: str | None, cognito: AWS_Cognito = Depends(get_aws_cognito)):
