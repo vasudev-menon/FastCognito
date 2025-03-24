@@ -1,5 +1,3 @@
-import base64
-import time
 from io import BytesIO
 
 import botocore
