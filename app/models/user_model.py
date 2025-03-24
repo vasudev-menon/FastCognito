@@ -11,6 +11,7 @@ class Challenge(str, Enum):
     EMAIL_OTP = "EMAIL_OTP"
     SMS_OTP = "SMS_OTP"
     # WEB_AUTHN = "WEB_AUTHN"
+    AUTHENTICATOR_MFA = "SOFTWARE_TOKEN_MFA"
 
 
 class UserSignup(BaseModel):
@@ -47,6 +48,7 @@ class ChangePassword(BaseModel):
 
 class RefreshToken(BaseModel):
     refresh_token: str
+    email: EmailStr
 
 
 class AccessToken(BaseModel):

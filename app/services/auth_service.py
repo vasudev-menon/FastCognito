@@ -1,7 +1,14 @@
+import base64
+import time
+from io import BytesIO
+
 import botocore
-from fastapi import HTTPException
+import qrcode
+from fastapi import HTTPException, Response
 from fastapi.responses import JSONResponse
+from otpauth import TOTP
 from pydantic import EmailStr
+from qrcode.image.pure import PyPNGImage
 
 from ..core.aws_cognito import AWS_Cognito
 from ..models.user_model import ChangePassword, ConfirmForgotPassword, ConfirmSignup, RespondAuthChallenge, UserSignin, UserSignup, UserVerify
@@ -239,7 +246,7 @@ class AuthService:
         else:
             return JSONResponse(content={"message": "Password changed successfully"}, status_code=200)
 
-    def new_access_token(refresh_token: str, cognito: AWS_Cognito):
+    def new_access_token(refresh_token: str, cognito: AWS_Cognito, email: EmailStr):
         """
         The function `new_access_token` generates a new access token using a refresh token in AWS
         Cognito and handles different exceptions accordingly.
@@ -258,12 +265,12 @@ class AuthService:
         its expiration time. The response includes the access token and its expiration time in seconds.
         """
         try:
-            response = cognito.new_access_token(refresh_token)
+            response = cognito.new_access_token(refresh_token, email)
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == "InvalidParameterException":
                 raise HTTPException(status_code=400, detail="Refresh token provided has wrong format")
             elif e.response["Error"]["Code"] == "NotAuthorizedException":
-                raise HTTPException(status_code=401, detail="Invalid refresh token provided")
+                raise HTTPException(status_code=401, detail=str(e))
             elif e.response["Error"]["Code"] == "LimitExceededException":
                 raise HTTPException(status_code=429, detail="Attempt limit exceeded, please try again later")
             else:
@@ -386,6 +393,62 @@ class AuthService:
                 raise HTTPException(status_code=429, detail="Too many requests")
             elif e.response["Error"]["Code"] == "UserNotFoundException":
                 raise HTTPException(status_code=404, detail="User does not exist")
+            else:
+                raise HTTPException(status_code=500, detail=str(e))
+        else:
+            return response
+
+    def add_mfa_to_user(data: dict, cognito: AWS_Cognito):
+        try:
+            response = cognito.set_user_mfa(data)
+
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "InvalidParameterException":
+                raise HTTPException(status_code=400, detail="Access token provided has wrong format")
+            elif e.response["Error"]["Code"] == "NotAuthorizedException":
+                raise HTTPException(status_code=401, detail="Invalid access token provided")
+            elif e.response["Error"]["Code"] == "UserNotFoundException":
+                raise HTTPException(status_code=404, detail="User does not exist")
+            elif e.response["Error"]["Code"] == "UserNotConfirmedException":
+                raise HTTPException(status_code=404, detail="User not Confirmed")
+            else:
+                raise HTTPException(status_code=500, detail=str(e))
+        else:
+            if response.get("SecretCode"):
+                # use b32 encode directly on secret code returned from cognito
+                totp = TOTP.from_b32encode(response.get("SecretCode"))
+                print(totp)
+                final_qr_code = totp.to_uri("Billimd_Cred_Platform:us-east-23dtuojzv6.auth.us-east-2.amazoncognito.com", "Authlib")
+                img = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    box_size=10,
+                    border=4,
+                )
+                img.add_data(final_qr_code)
+                img.make(fit=True)
+                img = img.make_image(fill_color="black", back_color="white", image_factory=PyPNGImage)
+                buf = BytesIO()
+                img.save(buf)
+
+                print(response.get("SecretCode"))
+
+                return Response(buf.getvalue(), media_type="image/png")
+
+    def verify_mfa(data: dict, cognito: AWS_Cognito):
+        try:
+            response = cognito.verify_software_token_mfa(data)
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "InvalidParameterException":
+                raise HTTPException(status_code=400, detail="Access token provided has wrong format")
+            elif e.response["Error"]["Code"] == "NotAuthorizedException":
+                raise HTTPException(status_code=401, detail="Invalid access token provided")
+            elif e.response["Error"]["Code"] == "TooManyRequestsException":
+                raise HTTPException(status_code=429, detail="Too many requests")
+            elif e.response["Error"]["Code"] == "UserNotFoundException":
+                raise HTTPException(status_code=404, detail="User does not exist")
+            elif e.response["Error"]["Code"] == "PasswordResetRequiredException":
+                raise HTTPException(status_code=404, detail="Password Reset Required")
             else:
                 raise HTTPException(status_code=500, detail=str(e))
         else:

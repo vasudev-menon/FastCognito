@@ -27,6 +27,9 @@ uvicorn = "*"
 fastapi = {extras = ["standard"], version = "*"}
 pydantic-settings = "*"
 python-multipart = "*"
+qrcode = "*"
+pypng = "*"
+otpauth = "*"
 
 [dev-packages]
 

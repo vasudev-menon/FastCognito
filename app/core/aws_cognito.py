@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, timezone
 from os import getenv
 
@@ -121,13 +122,12 @@ class AWS_Cognito:
 
         return response
 
-    def new_access_token(self, refresh_token: str):
+    def new_access_token(self, refresh_token: str, email: EmailStr):
+        secret_hash = calculate_secret_hash(getenv("AWS_COGNITO_APP_CLIENT_ID"), getenv("CLIENT_SECRET"), email)
         response = self.client.initiate_auth(
             ClientId=AWS_COGNITO_APP_CLIENT_ID,
             AuthFlow="REFRESH_TOKEN_AUTH",
-            AuthParameters={
-                "REFRESH_TOKEN": refresh_token,
-            },
+            AuthParameters={"REFRESH_TOKEN": refresh_token, "SECRET_HASH": secret_hash},
         )
 
         return response
@@ -137,14 +137,30 @@ class AWS_Cognito:
 
         return response
 
-    def set_user_mfa_preference(self, email: EmailStr, mfa_enabled: bool):
-        response = self.client.admin_set_user_mfa_preference(
-            UserPoolId=AWS_COGNITO_USER_POOL_ID,
-            Username=email,
-            SoftwareTokenMfaConfiguration="ENABLED" if mfa_enabled else "DISABLED",
-        )
+    def set_user_mfa(self, data: dict):
+        # response = self.client.set_user_mfa_preference(
+        #     UserPoolId=AWS_COGNITO_USER_POOL_ID,
+        #     # Username=email,
+        #     SoftwareTokenMfaSettings={"Enabled": True, "PreferredMfa": False},
+        #     AccessToken=data.access_token,
+        # )
+        # print(response)
+        # Generate a software token
+        # response = self.client.get_software_token(
+        #     AccessToken=data.access_token,
+        # )
+        # software_token = response["SessionToken"]
+        # secret_token = response["SecretCode"]
 
-        return response
+        # Generate a passkey (TOTP secret key)
+        totp_secret_key_response = self.client.associate_software_token(AccessToken=data.get("access_token"))
+
+        # totp_resp = {"software_token": software_token, "totp_secret_key": totp_secret_key}
+        # return software_token, totp_secret_key
+
+        # return response
+        if totp_secret_key_response["SecretCode"] is not None:
+            return totp_secret_key_response
 
     def send_response_challenge(self, data: RespondAuthChallenge):
         secret_hash = calculate_secret_hash(getenv("AWS_COGNITO_APP_CLIENT_ID"), getenv("CLIENT_SECRET"), data.email)
@@ -190,5 +206,12 @@ class AWS_Cognito:
         response = self.client.admin_confirm_sign_up(
             UserPoolId=AWS_COGNITO_USER_POOL_ID,
             Username=data.email,
+        )
+        return response
+
+    def verify_software_token_mfa(self, data: dict):
+        response = self.client.verify_software_token(
+            AccessToken=data.get("access_token"),
+            UserCode=data.get("code"),
         )
         return response
