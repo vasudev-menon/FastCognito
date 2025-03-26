@@ -451,3 +451,44 @@ class AuthService:
                 raise HTTPException(status_code=500, detail=str(e))
         else:
             return response
+
+    def register_for_passkeys(data: dict, cognito: AWS_Cognito):
+        try:
+            response = cognito.register_user_passkey(data)
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "InvalidParameterException":
+                raise HTTPException(status_code=400, detail=str(e))
+            elif e.response["Error"]["Code"] == "NotAuthorizedException":
+                raise HTTPException(status_code=401, detail="Invalid access token provided")
+            elif e.response["Error"]["Code"] == "TooManyRequestsException":
+                raise HTTPException(status_code=429, detail="Too many requests")
+            elif e.response["Error"]["Code"] == "UserNotFoundException":
+                raise HTTPException(status_code=404, detail="User does not exist")
+            elif e.response["Error"]["Code"] == "WebAuthnNotEnabledException":
+                raise HTTPException(status_code=404, detail="Web Auth Not Enabled!")
+            else:
+                raise HTTPException(status_code=500, detail=str(e))
+        else:
+            return response
+
+    def verify_passkey_registration(data: dict, cognito: AWS_Cognito):
+        try:
+            response = cognito.verify_user_passkey(data)
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "InvalidParameterException":
+                raise HTTPException(status_code=400, detail=str(e))
+            elif e.response["Error"]["Code"] == "NotAuthorizedException":
+                raise HTTPException(status_code=401, detail="Invalid access token provided")
+            elif e.response["Error"]["Code"] == "TooManyRequestsException":
+                raise HTTPException(status_code=429, detail="Too many requests")
+            elif e.response["Error"]["Code"] == "UserNotFoundException":
+                raise HTTPException(status_code=404, detail="User does not exist")
+            elif e.response["Error"]["Code"] == "WebAuthnNotEnabledException":
+                raise HTTPException(status_code=404, detail="Web Auth Not Enabled!")
+            elif e.response["Error"]["Code"] == "WebAuthnChallengeNotFoundException":
+                raise HTTPException(status_code=404, detail="Web Auth Challenge Not Found!")
+
+            else:
+                raise HTTPException(status_code=500, detail=str(e))
+        else:
+            return response

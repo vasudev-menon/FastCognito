@@ -6,9 +6,11 @@ from ..core.dependencies import get_aws_cognito
 from ..models.user_model import (
     AccessToken,
     ChangePassword,
+    CompletePasskeyRegistration,
     ConfirmForgotPassword,
     ConfirmSignup,
     RefreshToken,
+    RegisterPasskey,
     RespondAuthChallenge,
     UserSignin,
     UserSignup,
@@ -302,3 +304,16 @@ async def verify_mfa(token: str | None, code: str | None, cognito: AWS_Cognito =
 
         return AuthService.verify_mfa(data, cognito)
     return "Missing Token and Code", 401
+
+@auth_router.post("/register_passkey", status_code=status.HTTP_200_OK, tags=["Auth"])
+async def register_passkeys(data: RegisterPasskey, cognito: AWS_Cognito = Depends(get_aws_cognito)):
+    if data.access_token:
+        return AuthService.register_for_passkeys(data, cognito)
+    return "Missing Token", 401
+
+
+@auth_router.post("/verify_passkey", status_code=status.HTTP_200_OK, tags=["Auth"])
+async def verify_passkeys(data: CompletePasskeyRegistration, cognito: AWS_Cognito = Depends(get_aws_cognito)):
+    if data.access_token and data.credential:
+        return AuthService.verify_passkey_registration(data, cognito)
+    return "Missing Token and Credential", 401

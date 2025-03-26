@@ -64,3 +64,11 @@ class RespondAuthChallenge(BaseModel):
 
 class ConfirmSignup(BaseModel):
     email: EmailStr
+
+class RegisterPasskey(BaseModel):
+    access_token: str
+
+
+class CompletePasskeyRegistration(BaseModel):
+    access_token: str
+    credential: dict

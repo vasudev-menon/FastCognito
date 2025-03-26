@@ -223,3 +223,13 @@ class AWS_Cognito:
             UserCode=data.get("code"),
         )
         return response
+
+    def register_user_passkey(self, data: dict):
+        response = self.client.start_web_authn_registration(
+            AccessToken=data.access_token,
+        )
+        return response
+
+    def verify_user_passkey(self, data: dict):
+        response = self.client.complete_web_authn_registration(AccessToken=data.access_token, Credential=data.credential)
+        return response
