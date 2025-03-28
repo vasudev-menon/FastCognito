@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Optional
 
 from annotated_types import MaxLen, MinLen
 from pydantic import BaseModel, EmailStr, Field
@@ -30,7 +30,7 @@ class UserVerify(BaseModel):
 
 class UserSignin(BaseModel):
     email: EmailStr
-    password: Annotated[str, MinLen(8)]
+    password: Optional[str] = Field(min_length=8)
     challenge_name: Challenge
 
 
@@ -64,6 +64,7 @@ class RespondAuthChallenge(BaseModel):
 
 class ConfirmSignup(BaseModel):
     email: EmailStr
+
 
 class RegisterPasskey(BaseModel):
     access_token: str
