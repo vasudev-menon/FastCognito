@@ -157,7 +157,7 @@ class AuthService:
                     "message": "User signed in successfully",
                     "data": response,
                 }
-            return JSONResponse(content=content, status_code=200)
+            return content
 
     def forgot_password(email: EmailStr, cognito: AWS_Cognito):
         """

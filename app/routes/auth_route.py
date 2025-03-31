@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from pydantic import EmailStr
+from starlette.responses import RedirectResponse
 
 from ..core.aws_cognito import AWS_Cognito
 from ..core.dependencies import get_aws_cognito
@@ -74,7 +75,7 @@ async def resend_confirmation_code(email: EmailStr, cognito: AWS_Cognito = Depen
 
 # USER SIGNIN
 @auth_router.post("/signin", status_code=status.HTTP_200_OK, tags=["Auth"])
-async def signin(data: UserSignin, cognito: AWS_Cognito = Depends(get_aws_cognito)):
+async def signin(data: UserSignin, cognito: AWS_Cognito = Depends(get_aws_cognito), request: Request = None):
     """
     The `signin` function takes user sign-in data and AWS Cognito dependency to authenticate the user
     using the `AuthService.user_signin` method.
@@ -89,7 +90,13 @@ async def signin(data: UserSignin, cognito: AWS_Cognito = Depends(get_aws_cognit
     :return: The `signin` function is returning the result of calling the `user_signin` method of the
     `AuthService` class with the provided `data` and `cognito` parameters.
     """
-    return AuthService.user_signin(data, cognito)
+    response = AuthService.user_signin(data, cognito)
+    if response.get("data").get("AccessToken"):
+        url = request.headers["origin"] + f"/login?t={response['data']['AccessToken']}&r={response['data']['RefreshToken']}"
+        print(url)
+        return RedirectResponse(url, 303)
+
+    return response
 
 
 # FORGOT PASSWORD
